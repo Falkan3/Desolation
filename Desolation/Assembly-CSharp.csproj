@@ -53,11 +53,12 @@
      <Compile Include="Assets\Code\GameController\Aspect.cs" />
      <Compile Include="Assets\Code\GameController\Character.cs" />
      <Compile Include="Assets\Code\GameController\Game.cs" />
-     <Compile Include="Assets\Code\GameController\MouseMovement.cs" />
      <Compile Include="Assets\Code\GameController\SaveLoad.cs" />
-     <Compile Include="Assets\Code\GameController\TileEditor.cs" />
      <Compile Include="Assets\Code\Level\Level.cs" />
+     <Compile Include="Assets\Code\LevelEditor\MouseMovement.cs" />
      <Compile Include="Assets\Code\LevelEditor\MoveCamera.cs" />
+     <Compile Include="Assets\Code\LevelEditor\SetActiveTile.cs" />
+     <Compile Include="Assets\Code\LevelEditor\TileEditor.cs" />
      <Compile Include="Assets\Code\Menu\Emerge.cs" />
      <Compile Include="Assets\Code\Menu\Intro.cs" />
      <Compile Include="Assets\Code\Menu\IntroFlash.cs" />
