@@ -2,6 +2,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
+using System.IO;
+using UnityEditor;
 
 public class TileEditor : MonoBehaviour {
 
@@ -20,7 +22,10 @@ public class TileEditor : MonoBehaviour {
     private List<GameObject> listOfFloorButtons;
     private int floorTileIndex = 0; //index for iterating through maintile list
 
+    private int layer;
     private int activeObjectIndex;
+    private Color activeObjectColor;
+    private Color emptycolor;
     private GameObject activeObject; //active tile to place
     private GameObject objtodestroy;
 
@@ -50,6 +55,7 @@ public class TileEditor : MonoBehaviour {
         Debug.Log(misctiles.Count);
 
         generateTileEditor();
+        layer = 0;
     }
 	
 	// Update is called once per frame
@@ -63,7 +69,32 @@ public class TileEditor : MonoBehaviour {
         editorTexture.transform.position = new Vector2(ray.x, ray.y);
 
         if (Input.GetMouseButtonDown(0))
-            Debug.Log("Left click");
+        {
+            if(activeObject!=null && activeObjectColor!=emptycolor)
+            {
+                switch(layer)
+                {
+                    case 0:
+                        {
+                            objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                            index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+
+                            Debug.Log(activeObjectColor);
+                            PlaceNewTile(objtodestroy, activeObject, activeObjectColor, maintiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
+                            break;
+                        }
+                    case 1:
+                        {
+                            objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                            index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+
+                            PlaceNewTile(objtodestroy, activeObject, activeObjectColor, misctiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
+                            break;
+                        }
+                }
+                
+            }
+        }
 
         if (Input.GetMouseButtonDown(1))
         {
@@ -71,13 +102,23 @@ public class TileEditor : MonoBehaviour {
             Debug.Log(ray.x + " " + ray.y);
             Debug.Log(Mathf.Round(ray.x) + " " + Mathf.Round(ray.y));
 
-            objtodestroy = maintiles.Where(item => item.x == Mathf.Round(ray.x) && item.y == Mathf.Round(ray.y)).Select(item => item.tileobj).FirstOrDefault();
-            index = maintiles.FindIndex(item => item.x == Mathf.Round(ray.x) && item.y == Mathf.Round(ray.y));
-            DestroyTile(objtodestroy, maintiles, index);
-
-            objtodestroy = misctiles.Where(item => item.x == Mathf.Round(ray.x) && item.y == Mathf.Round(ray.y)).Select(item => item.tileobj).FirstOrDefault();
-            index = maintiles.FindIndex(item => item.x == Mathf.Round(ray.x) && item.y == Mathf.Round(ray.y));
-            DestroyTile(objtodestroy, misctiles, index);
+            switch (layer)
+            {
+                case 0:
+                    {
+                        objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                        index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                        DestroyTile(objtodestroy, maintiles, index, layer);
+                        break;
+                    }
+                case 1:
+                    {
+                        objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                        index = misctiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                        DestroyTile(objtodestroy, misctiles, index, layer);
+                        break;
+                    }
+            }
         }
 
         /*
@@ -90,7 +131,6 @@ public class TileEditor : MonoBehaviour {
     {
         panelPosition = GameObject.Find("Floor_panel").transform.position;
         editorTileCount = Mathf.FloorToInt(Camera.main.pixelHeight / 32f);
-        Debug.Log(Camera.main.pixelHeight);
         for (int i = 0; i < editorTileCount; i++)
         {
             newTile = Instantiate(menutile, new Vector3(0, -i * 32 - 16), Quaternion.identity) as GameObject;
@@ -111,11 +151,62 @@ public class TileEditor : MonoBehaviour {
         populateMenu(floorButtonList, 0);
     }
 
-    void DestroyTile(GameObject obj, List<Level.tile> list, int index)
+    void PlaceNewTile(GameObject obj, GameObject objToPlace, Color newColor, List<Level.tile> list, int index, int layer, int x, int y)
     {
         try
         {
             Debug.Log(obj);
+            if (index != -1)
+            {
+                list[index].tileobj = objToPlace;
+                Destroy(obj);
+                Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity);
+            }
+            else
+            {
+                GameObject tileobj = Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity) as GameObject;
+                list.Add(new Level.tile(x, y, tileobj));
+            }
+            switch (layer)
+            {
+                case 0:
+                    {
+                        if (index != -1)
+                            level.SetPixel(list[index].x, list[index].y, newColor);
+                        else
+                            level.SetPixel(x, y, newColor);
+                        break;
+                    }
+                case 1:
+                    {
+                        levelmisc.SetPixel(list[index].x, list[index].y, newColor);
+                        break;
+                    }
+            }
+
+        }
+        catch (System.Exception) { }
+    }
+
+    void DestroyTile(GameObject obj, List<Level.tile> list, int index, int layer)
+    {
+        try
+        {
+            Debug.Log(obj);
+            switch (layer)
+            {
+                case 0:
+                    {
+
+                        level.SetPixel(list[index].x, list[index].y, new Color(0f,0f,0f,0f));
+                        break;
+                    }
+                case 1:
+                    {
+                        levelmisc.SetPixel(list[index].x, list[index].y, new Color(0f, 0f, 0f, 0f));
+                        break;
+                    }
+            }
             list.RemoveAt(index);
             Destroy(obj);
         }
@@ -130,17 +221,65 @@ public class TileEditor : MonoBehaviour {
             SetActiveTile script = listOfButtons[i].GetComponent<SetActiveTile>();
             script.index = floorTileIndex+i;
             script.list = list; // 0 = floor, 1 = walls, 2 = misc
-            script.changeSelf(levelManager.Sprite_FloorTileList[floorTileIndex+i]);
+            script.changeSelf(levelManager.Sprite_FloorTileList[floorTileIndex+i], levelManager.Color_FloorTileList[floorTileIndex + i]);
         }
     }
 
-    public void ChangeActiveTile(int ind, GameObject obj)
+    public void ChangeActiveTile(int ind, GameObject obj, Color color)
     {
         activeObjectIndex = ind;
         activeObject = obj;
+        activeObjectColor = color;
         SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
         editorTextureRenderer.color = newSprite.color;
         editorTextureRenderer.sprite = newSprite.sprite;
+    }
+
+    public void saveLevel()
+    {
+        byte[] bytes = level.EncodeToPNG();
+        byte[] bytesmisc = levelmisc.EncodeToPNG();
+
+        File.WriteAllBytes(Application.dataPath + "/Levels/"+level.name+".png", bytes);
+        File.WriteAllBytes(Application.dataPath + "/Levels/" + levelmisc.name + ".png", bytesmisc);
+        Debug.Log("Saved level to " + (Application.dataPath + "/../"));
+        loadLevel();
+    }
+
+    public void loadLevel()
+    {
+        string pathmain = "Assets/Levels/" + level.name + ".png";
+        string pathmisc = "Assets/Levels/" + levelmisc.name + ".png";
+
+        AssetDatabase.Refresh();
+        AssetDatabase.ImportAsset(pathmain);
+        AssetDatabase.ImportAsset(pathmisc);
+
+        TextureImporter importermain = AssetImporter.GetAtPath(pathmain) as TextureImporter;
+        TextureImporter importermisc = AssetImporter.GetAtPath(pathmisc) as TextureImporter;
+
+        importermain.textureType = TextureImporterType.Advanced;
+        importermain.mipmapFilter = TextureImporterMipFilter.BoxFilter;
+        importermain.wrapMode = TextureWrapMode.Clamp;
+        importermain.filterMode = FilterMode.Point;
+        importermain.textureFormat = TextureImporterFormat.RGBA32;
+        importermain.isReadable = true;
+
+        importermisc.textureType = TextureImporterType.Advanced;
+        importermisc.mipmapFilter = TextureImporterMipFilter.BoxFilter;
+        importermisc.wrapMode = TextureWrapMode.Clamp;
+        importermisc.filterMode = FilterMode.Point;
+        importermisc.textureFormat = TextureImporterFormat.RGBA32;
+        importermisc.isReadable = true;
+
+        AssetDatabase.WriteImportSettingsIfDirty(pathmain);
+        AssetDatabase.WriteImportSettingsIfDirty(pathmisc);
+
+        byte[] bytes = File.ReadAllBytes(Application.dataPath + "/Levels/" + level.name + ".png");
+        byte[] bytesmisc = File.ReadAllBytes(Application.dataPath + "/Levels/" + levelmisc.name + ".png");
+
+        level.LoadImage(bytes);
+        levelmisc.LoadImage(bytesmisc);
     }
 
 

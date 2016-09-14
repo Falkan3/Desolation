@@ -133,7 +133,7 @@ public class Level : MonoBehaviour
         for(int i=0; i<prefabFloor.Length; i++)
         {
             Sprite_FloorTileList.Add(prefabFloor[i]);
-            Color_FloorTileList.Add(new Color(1f-((float)Color_FloorTileList.Count / 255f),0,0));
+            Color_FloorTileList.Add(new Color(0, 0, 1f - ((float)Color_FloorTileList.Count / 255f)));
         }
         for (int i = 0; i < prefabWalls.Length; i++)
         {
@@ -143,12 +143,12 @@ public class Level : MonoBehaviour
         for (int i = 0; i < prefabMiscFloor.Length; i++)
         {
             Sprite_MiscList.Add(prefabMiscFloor[i]);
-            Color_Misc.Add(new Color(0, 0, 1f - ((float)Color_Misc.Count / 255f)));
+            Color_Misc.Add(new Color(1f - ((float)Color_Misc.Count / 255f), 0, 0));
         }
         for (int i = 0; i < prefabMisc.Length; i++)
         {
             Sprite_MiscList.Add(prefabMisc[i]);
-            Color_Misc.Add(new Color(0, 0, 1f - ((float)Color_Misc.Count / 255f)));
+            Color_Misc.Add(new Color(1f - ((float)Color_Misc.Count / 255f), 0, 0));
         } 
     }
 
