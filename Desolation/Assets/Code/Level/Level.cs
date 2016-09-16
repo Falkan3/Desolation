@@ -53,16 +53,20 @@ public class Level : MonoBehaviour
     // Use this for initialization
     void Start()
     {
-        levelWidth = levelTexture.width;
-        levelHeight = levelTexture.height;
         LoadPrefabs();
-        loadLevel();
-        loadMisc();
+        if (levelTexture != null)
+        {
+            loadLevel();
+            loadMisc();
+        }
         //Debug.Log(maintilelist.Count);
     }
 
     public void loadLevel()
     {
+        levelWidth = levelTexture.width;
+        levelHeight = levelTexture.height;
+
         tileColors = new Color[levelWidth * levelHeight];
         tileColors = levelTexture.GetPixels();
 
@@ -101,7 +105,7 @@ public class Level : MonoBehaviour
 
     }
 
-    void loadMisc()
+    public void loadMisc()
     {
         tileColors = new Color[levelWidth * levelHeight];
         tileColors = levelMiscTexture.GetPixels();
@@ -122,7 +126,7 @@ public class Level : MonoBehaviour
         }
     }
 
-    void LoadPrefabs(string mainfolder = "Prefabs/Tiles")
+    public void LoadPrefabs(string mainfolder = "Prefabs/Tiles")
     {
         GameObject[] prefabFloor; GameObject[] prefabWalls; GameObject[] prefabMiscFloor; GameObject[] prefabMisc;
         prefabFloor = Resources.LoadAll<GameObject>(mainfolder + "/1/Floor");

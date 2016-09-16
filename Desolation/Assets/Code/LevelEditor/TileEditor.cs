@@ -1,14 +1,16 @@
 ﻿using UnityEngine;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.IO;
 using UnityEditor;
+using UnityEngine.UI;
 
 public class TileEditor : MonoBehaviour {
 
     private Level levelManager;
 
+    public string pathmain = "placeholder.png";
+    public string pathmisc = "placeholdermisc.png";
     public Texture2D level;
     public Texture2D levelmisc;
     public GameObject editorTexture;
@@ -48,7 +50,7 @@ public class TileEditor : MonoBehaviour {
         editorTextureRenderer = editorTexture.GetComponent<SpriteRenderer>();
         editorTextureRenderer.color = new Color(editorTextureRenderer.color.r, editorTextureRenderer.color.g, editorTextureRenderer.color.b, 0.5f);
         //levelManager.loadLevel();
-        
+
         maintiles = levelManager.maintilelist;
         misctiles = levelManager.misctilelist;
         Debug.Log(maintiles.Count);
@@ -214,7 +216,7 @@ public class TileEditor : MonoBehaviour {
     }
 
     void populateMenu(List<GameObject> listOfButtons, byte list)
-    {
+    {   
         //list 0 for floor, 1 for walls, 2 for misc;
         for (int i = 0; i < listOfButtons.Count; i++)
         {
@@ -237,26 +239,41 @@ public class TileEditor : MonoBehaviour {
 
     public void saveLevel()
     {
-        byte[] bytes = level.EncodeToPNG();
-        byte[] bytesmisc = levelmisc.EncodeToPNG();
+        //pathmain = EditorUtility.SaveFilePanel("Save main level texture", "", level.name + ".png", "png");
+        //pathmisc = EditorUtility.SaveFilePanel("Save misc level texture", "", levelmisc.name + ".png", "png");
 
-        File.WriteAllBytes(Application.dataPath + "/Levels/"+level.name+".png", bytes);
-        File.WriteAllBytes(Application.dataPath + "/Levels/" + levelmisc.name + ".png", bytesmisc);
-        Debug.Log("Saved level to " + (Application.dataPath + "/../"));
-        loadLevel();
+        byte[] bytes = level.EncodeToPNG();
+        File.WriteAllBytes(Application.dataPath + "/Levels/" + pathmain, bytes);
+
+        byte[] bytesmisc = levelmisc.EncodeToPNG();
+        File.WriteAllBytes(Application.dataPath + "/Levels/" + pathmisc, bytesmisc);
+
+        applyLevel();
     }
 
-    public void loadLevel()
+    public void applyLevel()
     {
-        string pathmain = "Assets/Levels/" + level.name + ".png";
-        string pathmisc = "Assets/Levels/" + levelmisc.name + ".png";
+        /*
+        string[] stringSeparators = new string[] { "Assets/" };
+        string[] result; string[] resultmisc;
+        result = pathmain.Split(stringSeparators, System.StringSplitOptions.None);
+        resultmisc = pathmisc.Split(stringSeparators, System.StringSplitOptions.None);
+        */
+
+        string pathtomain;
+        string pathtomisc;
+
+        pathtomain = "Assets/Levels/" + pathmain;
+        pathtomisc = "Assets/Levels/" + pathmisc;
+
+        Debug.Log(pathtomain);
 
         AssetDatabase.Refresh();
-        AssetDatabase.ImportAsset(pathmain);
-        AssetDatabase.ImportAsset(pathmisc);
+        AssetDatabase.ImportAsset(pathtomain);
+        AssetDatabase.ImportAsset(pathtomisc);
 
-        TextureImporter importermain = AssetImporter.GetAtPath(pathmain) as TextureImporter;
-        TextureImporter importermisc = AssetImporter.GetAtPath(pathmisc) as TextureImporter;
+        TextureImporter importermain = AssetImporter.GetAtPath(pathtomain) as TextureImporter;
+        TextureImporter importermisc = AssetImporter.GetAtPath(pathtomisc) as TextureImporter;
 
         importermain.textureType = TextureImporterType.Advanced;
         importermain.mipmapFilter = TextureImporterMipFilter.BoxFilter;
@@ -272,14 +289,81 @@ public class TileEditor : MonoBehaviour {
         importermisc.textureFormat = TextureImporterFormat.RGBA32;
         importermisc.isReadable = true;
 
-        AssetDatabase.WriteImportSettingsIfDirty(pathmain);
-        AssetDatabase.WriteImportSettingsIfDirty(pathmisc);
+        AssetDatabase.WriteImportSettingsIfDirty(pathtomain);
+        AssetDatabase.WriteImportSettingsIfDirty(pathtomisc);
 
-        byte[] bytes = File.ReadAllBytes(Application.dataPath + "/Levels/" + level.name + ".png");
-        byte[] bytesmisc = File.ReadAllBytes(Application.dataPath + "/Levels/" + levelmisc.name + ".png");
+        //level.LoadImage(bytes);
+        //levelmisc.LoadImage(bytesmisc);
+    }
 
-        level.LoadImage(bytes);
-        levelmisc.LoadImage(bytesmisc);
+    public void loadLevel()
+    {
+        string loadfilepath = EditorUtility.OpenFilePanel("Load a main map", Application.dataPath + "/Levels/", "png");
+        string loadfilepathmisc = EditorUtility.OpenFilePanel("Load a misc map", Application.dataPath + "/Levels/", "png");
+
+        string[] stringSeparators = new string[] { "/" };
+        string[] result;
+        result = loadfilepath.Split(stringSeparators, System.StringSplitOptions.None);
+        pathmain = result[result.Length-1];
+        result = loadfilepathmisc.Split(stringSeparators, System.StringSplitOptions.None);
+        pathmisc = result[result.Length-1];
+
+        GameObject inputFieldGo = GameObject.Find("InputField");
+        InputField inputFieldCo = inputFieldGo.GetComponent<InputField>();
+        stringSeparators = new string[] { "." };
+        result = pathmain.Split(stringSeparators, System.StringSplitOptions.None);
+        inputFieldCo.text = result[0];
+
+        if (loadfilepath.Length != 0)
+        {
+            byte[] bytes = File.ReadAllBytes(loadfilepath);
+            Texture2D tempmaintexture = new Texture2D(128, 128);
+            tempmaintexture.LoadImage(bytes);
+            level = tempmaintexture;
+            level.name = pathmain;
+            levelManager.levelTexture = tempmaintexture;
+            levelManager.levelTexture.name = pathmain;
+        }
+
+        if (loadfilepathmisc.Length != 0)
+        {
+            byte[] bytesmisc = File.ReadAllBytes(loadfilepathmisc);
+            Texture2D tempmisctexture = new Texture2D(128, 128);
+            tempmisctexture.LoadImage(bytesmisc);
+            levelmisc = tempmisctexture;
+            levelmisc.name = pathmisc;
+            levelManager.levelMiscTexture = tempmisctexture;
+            levelManager.levelMiscTexture.name = pathmisc;
+        }
+
+        try
+        {
+            foreach (Level.tile tile in maintiles)
+            {
+                Destroy(tile.tileobj);
+            }
+            maintiles.Clear();
+            foreach (Level.tile tile in misctiles)
+            {
+                Destroy(tile.tileobj);
+            }
+            misctiles.Clear();
+
+            levelManager.loadLevel();
+            levelManager.loadMisc();
+
+            Debug.Log("Loaded " + pathmain + " | " + pathmisc);
+        }
+        catch (System.Exception)
+        {
+            Debug.Log("Failed to load selected map!");
+        }
+    }
+
+    public void SetMapName(string name)
+    {
+        pathmain = name + ".png";
+        pathmisc = name + "misc.png";
     }
 
 
