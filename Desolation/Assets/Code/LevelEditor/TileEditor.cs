@@ -15,6 +15,7 @@ public class TileEditor : MonoBehaviour {
     public Texture2D levelmisc;
     public GameObject editorTexture;
     private SpriteRenderer editorTextureRenderer;
+    private Sprite editorDefaultSprite;
     private Vector2 ray;
 
     private List<Level.tile> maintiles = new List<Level.tile>();
@@ -47,6 +48,7 @@ public class TileEditor : MonoBehaviour {
             level = levelManager.levelTexture;
         if (levelmisc == null)
             levelmisc = levelManager.levelMiscTexture;
+
         editorTextureRenderer = editorTexture.GetComponent<SpriteRenderer>();
         editorTextureRenderer.color = new Color(editorTextureRenderer.color.r, editorTextureRenderer.color.g, editorTextureRenderer.color.b, 0.5f);
         //levelManager.loadLevel();
@@ -55,6 +57,8 @@ public class TileEditor : MonoBehaviour {
         misctiles = levelManager.misctilelist;
         Debug.Log(maintiles.Count);
         Debug.Log(misctiles.Count);
+
+        editorDefaultSprite = editorTextureRenderer.sprite;
 
         generateTileEditor();
         layer = 0;
@@ -74,7 +78,7 @@ public class TileEditor : MonoBehaviour {
         {
             if(activeObject!=null && activeObjectColor!=emptycolor)
             {
-                switch(layer)
+                switch (layer)
                 {
                     case 0:
                         {
@@ -94,32 +98,36 @@ public class TileEditor : MonoBehaviour {
                             break;
                         }
                 }
-                
             }
         }
 
         if (Input.GetMouseButtonDown(1))
         {
-            //Debug.Log(levelManager.maintilelist.First(item => item.x == ray.x).tileobj);
-            Debug.Log(ray.x + " " + ray.y);
-            Debug.Log(Mathf.Round(ray.x) + " " + Mathf.Round(ray.y));
-
-            switch (layer)
+            if (activeObject == null || activeObjectColor == emptycolor)
             {
-                case 0:
-                    {
-                        objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
-                        index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
-                        DestroyTile(objtodestroy, maintiles, index, layer);
-                        break;
-                    }
-                case 1:
-                    {
-                        objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
-                        index = misctiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
-                        DestroyTile(objtodestroy, misctiles, index, layer);
-                        break;
-                    }
+                Debug.Log(ray.x + " " + ray.y);
+
+                switch (layer)
+                {
+                    case 0:
+                        {
+                            objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                            index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                            DestroyTile(objtodestroy, maintiles, index, layer);
+                            break;
+                        }
+                    case 1:
+                        {
+                            objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                            index = misctiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                            DestroyTile(objtodestroy, misctiles, index, layer);
+                            break;
+                        }
+                }
+            }
+            else
+            {
+                ResetActiveTile();
             }
         }
 
@@ -155,14 +163,17 @@ public class TileEditor : MonoBehaviour {
 
     void PlaceNewTile(GameObject obj, GameObject objToPlace, Color newColor, List<Level.tile> list, int index, int layer, int x, int y)
     {
-        try
+        Debug.Log(obj + " index = " + index);
+        if ((x >= 0 && y >= 0) && (x<level.width && y<level.height))
         {
-            Debug.Log(obj);
             if (index != -1)
             {
-                list[index].tileobj = objToPlace;
-                Destroy(obj);
-                Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity);
+                //list[index].tileobj = objToPlace;
+                //Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity);
+
+                GameObject tileobj = Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity) as GameObject;
+                list.Add(new Level.tile(x, y, tileobj));
+                DestroyTile(obj, list, index, layer);
             }
             else
             {
@@ -173,10 +184,11 @@ public class TileEditor : MonoBehaviour {
             {
                 case 0:
                     {
-                        if (index != -1)
-                            level.SetPixel(list[index].x, list[index].y, newColor);
-                        else
-                            level.SetPixel(x, y, newColor);
+                        /*
+                            if (index != -1)
+                                level.SetPixel(list[index].x, list[index].y, newColor);
+                            else*/
+                        level.SetPixel(x, y, newColor);
                         break;
                     }
                 case 1:
@@ -185,34 +197,42 @@ public class TileEditor : MonoBehaviour {
                         break;
                     }
             }
-
         }
-        catch (System.Exception) { }
+        else
+        {
+            Debug.Log("Cannot place on negative indexes or exceeding level bounds! (bounds: " + level.width + " " + level.height + ")");
+        }
+
     }
 
     void DestroyTile(GameObject obj, List<Level.tile> list, int index, int layer)
     {
-        try
+
+        Debug.Log(obj);
+        if (index != -1)
         {
-            Debug.Log(obj);
             switch (layer)
             {
                 case 0:
                     {
-
-                        level.SetPixel(list[index].x, list[index].y, new Color(0f,0f,0f,0f));
+                        if (level != null)
+                        {
+                            level.SetPixel(list[index].x, list[index].y, new Color(0f, 0f, 0f, 0f));
+                        }
                         break;
                     }
                 case 1:
                     {
-                        levelmisc.SetPixel(list[index].x, list[index].y, new Color(0f, 0f, 0f, 0f));
+                        if (levelmisc != null)
+                        {
+                            levelmisc.SetPixel(list[index].x, list[index].y, new Color(0f, 0f, 0f, 0f));
+                        }
                         break;
                     }
             }
             list.RemoveAt(index);
-            Destroy(obj);
         }
-        catch (System.Exception) { }
+        Destroy(obj);
     }
 
     void populateMenu(List<GameObject> listOfButtons, byte list)
@@ -235,6 +255,15 @@ public class TileEditor : MonoBehaviour {
         SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
         editorTextureRenderer.color = newSprite.color;
         editorTextureRenderer.sprite = newSprite.sprite;
+    }
+
+    public void ResetActiveTile()
+    {
+        activeObjectIndex = -1;
+        activeObject = null;
+        activeObjectColor = emptycolor;
+        editorTextureRenderer.color = new Color(editorTextureRenderer.color.r, editorTextureRenderer.color.g, editorTextureRenderer.color.b, 0.5f);
+        editorTextureRenderer.sprite = editorDefaultSprite;
     }
 
     public void saveLevel()
@@ -366,6 +395,17 @@ public class TileEditor : MonoBehaviour {
         pathmisc = name + "misc.png";
     }
 
+    public int upper_power_of_two(int v)
+    {
+        v--;
+        v |= v >> 1;
+        v |= v >> 2;
+        v |= v >> 4;
+        v |= v >> 8;
+        v |= v >> 16;
+        v++;
+        return v;
+    }
 
     /*
     GameObject HoverSelect()
@@ -384,4 +424,4 @@ public class TileEditor : MonoBehaviour {
         else return null;
     }
     */
-        }
+}
