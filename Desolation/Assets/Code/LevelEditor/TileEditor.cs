@@ -4,10 +4,14 @@ using System.Linq;
 using System.IO;
 using UnityEditor;
 using UnityEngine.UI;
+using UnityEngine.EventSystems;
 
 public class TileEditor : MonoBehaviour {
 
     private Level levelManager;
+
+    private int levelWidth=16;
+    private int levelHeight=16;
 
     public string pathmain = "placeholder.png";
     public string pathmisc = "placeholdermisc.png";
@@ -16,6 +20,8 @@ public class TileEditor : MonoBehaviour {
     public GameObject editorTexture;
     private SpriteRenderer editorTextureRenderer;
     private Sprite editorDefaultSprite;
+    public GameObject editorBoundsTexture;
+    private Vector2 editorBoundsTextureScale;
     private Vector2 ray;
 
     private List<Level.tile> maintiles = new List<Level.tile>();
@@ -50,7 +56,7 @@ public class TileEditor : MonoBehaviour {
             levelmisc = levelManager.levelMiscTexture;
 
         editorTextureRenderer = editorTexture.GetComponent<SpriteRenderer>();
-        editorTextureRenderer.color = new Color(editorTextureRenderer.color.r, editorTextureRenderer.color.g, editorTextureRenderer.color.b, 0.5f);
+        //editorTextureRenderer.color = new Color(editorTextureRenderer.color.r, editorTextureRenderer.color.g, editorTextureRenderer.color.b, 0.5f);
         //levelManager.loadLevel();
 
         maintiles = levelManager.maintilelist;
@@ -59,6 +65,7 @@ public class TileEditor : MonoBehaviour {
         Debug.Log(misctiles.Count);
 
         editorDefaultSprite = editorTextureRenderer.sprite;
+        resizeLevelBounds();
 
         generateTileEditor();
         layer = 0;
@@ -74,60 +81,64 @@ public class TileEditor : MonoBehaviour {
 
         editorTexture.transform.position = new Vector2(ray.x, ray.y);
 
-        if (Input.GetMouseButtonDown(0))
+        if (!EventSystem.current.IsPointerOverGameObject())
         {
-            if(activeObject!=null && activeObjectColor!=emptycolor)
+
+            if (Input.GetMouseButtonDown(0))
             {
-                switch (layer)
+                if(activeObject!=null && activeObjectColor!=emptycolor)
                 {
-                    case 0:
-                        {
-                            objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
-                            index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                    switch (layer)
+                    {
+                        case 0:
+                            {
+                                objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                                index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
 
-                            Debug.Log(activeObjectColor);
-                            PlaceNewTile(objtodestroy, activeObject, activeObjectColor, maintiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
-                            break;
-                        }
-                    case 1:
-                        {
-                            objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
-                            index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                                Debug.Log(activeObjectColor);
+                                PlaceNewTile(objtodestroy, activeObject, activeObjectColor, maintiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
+                                break;
+                            }
+                        case 1:
+                            {
+                                objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                                index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
 
-                            PlaceNewTile(objtodestroy, activeObject, activeObjectColor, misctiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
-                            break;
-                        }
+                                PlaceNewTile(objtodestroy, activeObject, activeObjectColor, misctiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
+                                break;
+                            }
+                    }
                 }
             }
-        }
 
-        if (Input.GetMouseButtonDown(1))
-        {
-            if (activeObject == null || activeObjectColor == emptycolor)
+            if (Input.GetMouseButtonDown(1))
             {
-                Debug.Log(ray.x + " " + ray.y);
-
-                switch (layer)
+                if (activeObject == null || activeObjectColor == emptycolor)
                 {
-                    case 0:
-                        {
-                            objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
-                            index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
-                            DestroyTile(objtodestroy, maintiles, index, layer);
-                            break;
-                        }
-                    case 1:
-                        {
-                            objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
-                            index = misctiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
-                            DestroyTile(objtodestroy, misctiles, index, layer);
-                            break;
-                        }
+                    Debug.Log(ray.x + " " + ray.y);
+
+                    switch (layer)
+                    {
+                        case 0:
+                            {
+                                objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                                index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                                DestroyTile(objtodestroy, maintiles, index, layer);
+                                break;
+                            }
+                        case 1:
+                            {
+                                objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                                index = misctiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                                DestroyTile(objtodestroy, misctiles, index, layer);
+                                break;
+                            }
+                    }
                 }
-            }
-            else
-            {
-                ResetActiveTile();
+                else
+                {
+                    ResetActiveTile();
+                }
             }
         }
 
@@ -381,6 +392,10 @@ public class TileEditor : MonoBehaviour {
             levelManager.loadLevel();
             levelManager.loadMisc();
 
+            levelWidth = level.width;
+            levelHeight = level.height;
+            resizeLevelBounds();
+
             Debug.Log("Loaded " + pathmain + " | " + pathmisc);
         }
         catch (System.Exception)
@@ -393,6 +408,45 @@ public class TileEditor : MonoBehaviour {
     {
         pathmain = name + ".png";
         pathmisc = name + "misc.png";
+    }
+
+    public void changeLevelWidth(string width)
+    {
+        int.TryParse(width, out levelWidth);
+    }
+
+    public void changeLevelHeight(string height)
+    {
+        int.TryParse(height, out levelHeight);
+    }
+
+    public void resizeLevel(int width, int height)
+    {
+        levelWidth = width;
+        levelHeight = height;
+    }
+
+    public void resizeLevelBounds()
+    {
+        level.Resize(levelWidth, levelHeight);
+        Color32 resetColor = new Color32(0, 0, 0, 0);
+        Color32[] resetColorArray = level.GetPixels32();
+        for (int i = 0; i < resetColorArray.Length; i++)
+        {
+            resetColorArray[i] = resetColor;
+        }
+
+        level.SetPixels32(resetColorArray);
+        level.Apply();
+        levelmisc = level;
+
+        editorBoundsTextureScale = editorBoundsTexture.transform.localScale;
+        editorBoundsTextureScale.x = levelWidth;
+        editorBoundsTextureScale.y = levelHeight;
+        editorBoundsTexture.transform.localScale = editorBoundsTextureScale;
+        editorBoundsTextureScale.x =  levelWidth * 0.5f - 0.5f;
+        editorBoundsTextureScale.y = levelHeight * 0.5f -0.5f;
+        editorBoundsTexture.transform.position = editorBoundsTextureScale;
     }
 
     public int upper_power_of_two(int v)

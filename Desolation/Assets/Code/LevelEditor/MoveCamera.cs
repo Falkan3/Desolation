@@ -1,5 +1,6 @@
 ﻿using UnityEngine;
 using System.Collections;
+using UnityEngine.EventSystems;
 
 public class MoveCamera : MonoBehaviour {
     public int speed;
@@ -25,6 +26,7 @@ public class MoveCamera : MonoBehaviour {
             transform.Translate(moveVector);
         }
 
-        Camera.main.orthographicSize -= Input.GetAxis("Mouse ScrollWheel") * scrollsensitivity;
+        if (!EventSystem.current.IsPointerOverGameObject())
+            Camera.main.orthographicSize -= Input.GetAxis("Mouse ScrollWheel") * scrollsensitivity;
     }
 }
