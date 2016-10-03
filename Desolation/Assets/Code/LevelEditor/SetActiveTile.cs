@@ -20,7 +20,7 @@ public class SetActiveTile : MonoBehaviour {
 
     public void setTile()
     {
-        editor.ChangeActiveTile(index, tile, tilecolor);
+        editor.ChangeActiveTile(index, tile, tilecolor, list);
     }
 
     public void changeSelf(GameObject obj, Color color)
@@ -29,6 +29,13 @@ public class SetActiveTile : MonoBehaviour {
         tilecolor = color;
         button = GetComponent<Button>();
         button.image.sprite = obj.GetComponent<SpriteRenderer>().sprite;
+    }
+    public void resetSelf(Color color)
+    {
+        tile = null;
+        tilecolor = color;
+        button = GetComponent<Button>();
+        button.image.sprite = null;
     }
 
 }

@@ -119,7 +119,7 @@ public class Level : MonoBehaviour
                     if (Color_Misc[i] == (tileColors[x + y * levelWidth]))
                     {
                         tileobj = Instantiate(Sprite_MiscList[i], new Vector3(x, y), Quaternion.identity) as GameObject;
-                        maintilelist.Add(new tile(x, y, tileobj));
+                        misctilelist.Add(new tile(x, y, tileobj));
                     }
                 }
             }

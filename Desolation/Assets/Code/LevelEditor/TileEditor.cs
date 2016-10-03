@@ -18,6 +18,7 @@ public class TileEditor : MonoBehaviour {
     public Texture2D level;
     public Texture2D levelmisc;
     public GameObject editorTexture;
+    public GameObject editorTexture_empty;
     private SpriteRenderer editorTextureRenderer;
     private Sprite editorDefaultSprite;
     public GameObject editorBoundsTexture;
@@ -28,8 +29,14 @@ public class TileEditor : MonoBehaviour {
     private List<Level.tile> misctiles = new List<Level.tile>();
 
     //Editor buttons
+    /*
     private List<GameObject> listOfFloorButtons;
+    private List<GameObject> listOfWallButtons;
+    private List<GameObject> listOfMiscButtons;
+    */
     private int floorTileIndex = 0; //index for iterating through maintile list
+    private int wallTileIndex = 0; //index for iterating through maintile list
+    private int miscTileIndex = 0; //index for iterating through maintile list
 
     private int layer;
     private int activeObjectIndex;
@@ -41,11 +48,15 @@ public class TileEditor : MonoBehaviour {
     
     private int index = 0; //index of tile to destroy
     //for left tile menu
-    private Vector3 panelPosition;
+    private Vector3 panelPositionFloor;
+    private Vector3 panelPositionWall;
+    private Vector3 panelPositionMisc;
     private int editorTileCount;
     private GameObject newTile;
     public GameObject menutile;
     List<GameObject> floorButtonList = new List<GameObject>();
+    List<GameObject> wallButtonList = new List<GameObject>();
+    List<GameObject> miscButtonList = new List<GameObject>();
 
     // Use this for initialization
     void Start () {
@@ -65,6 +76,7 @@ public class TileEditor : MonoBehaviour {
         Debug.Log(misctiles.Count);
 
         editorDefaultSprite = editorTextureRenderer.sprite;
+
         resizeLevelBounds();
 
         generateTileEditor();
@@ -102,8 +114,9 @@ public class TileEditor : MonoBehaviour {
                         case 1:
                             {
                                 objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
-                                index = maintiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
+                                index = misctiles.FindIndex(item => item.x == ray.x && item.y == ray.y);
 
+                                Debug.Log(activeObjectColor);
                                 PlaceNewTile(objtodestroy, activeObject, activeObjectColor, misctiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
                                 break;
                             }
@@ -150,26 +163,41 @@ public class TileEditor : MonoBehaviour {
 
     void generateTileEditor()
     {
-        panelPosition = GameObject.Find("Floor_panel").transform.position;
+        panelPositionFloor = GameObject.Find("Floor_panel").transform.position;
+        panelPositionWall = GameObject.Find("Wall_panel").transform.position;
+        panelPositionMisc = GameObject.Find("Misc_panel").transform.position;
+
         editorTileCount = Mathf.FloorToInt(Camera.main.pixelHeight / 32f);
+        Vector2 pos;
+
         for (int i = 0; i < editorTileCount; i++)
         {
-            newTile = Instantiate(menutile, new Vector3(0, -i * 32 - 16), Quaternion.identity) as GameObject;
-            Vector2 pos = new Vector2(0, panelPosition.y + (- i * 32 - 16));
+            newTile = Instantiate(menutile, new Vector3(0, 0), Quaternion.identity) as GameObject;
+            pos = new Vector2(0, panelPositionFloor.y + (- i * 32 - 16));
             newTile.transform.SetParent(GameObject.Find("Floor_panel").transform);
             newTile.transform.localScale = new Vector3(1, 1, 1);
             newTile.transform.localPosition = pos;
-            /*
-            SetActiveTile script = newTile.GetComponent<SetActiveTile>();
-            script.index=i;
-            script.list = 0; // 0 = floor, 1 = walls, 2 = misc
-            script.changeSelf(levelManager.Sprite_FloorTileList[tileIndex]); 
-            tileIndex++;
-            */
             floorButtonList.Add(newTile);
+
+            newTile = Instantiate(menutile, new Vector3(0, 0), Quaternion.identity) as GameObject;
+            pos = new Vector2(0, panelPositionWall.y + (-i * 32 - 16));
+            newTile.transform.SetParent(GameObject.Find("Wall_panel").transform);
+            newTile.transform.localScale = new Vector3(1, 1, 1);
+            newTile.transform.localPosition = pos;
+            wallButtonList.Add(newTile);
+
+            newTile = Instantiate(menutile, new Vector3(0, 0), Quaternion.identity) as GameObject;
+            pos = new Vector2(0, panelPositionMisc.y + (-i * 32 - 16));
+            newTile.transform.SetParent(GameObject.Find("Misc_panel").transform);
+            newTile.transform.localScale = new Vector3(1, 1, 1);
+            newTile.transform.localPosition = pos;
+            miscButtonList.Add(newTile);
         }
-        Debug.Log(floorButtonList.Count);
-        populateMenu(floorButtonList, 0);
+        Debug.Log("Button counts: " + floorButtonList.Count + "|" + wallButtonList.Count + "|" + miscButtonList.Count);
+
+        populateMenu(floorButtonList, 0, floorTileIndex);
+        populateMenu(wallButtonList, 1, wallTileIndex);
+        populateMenu(miscButtonList, 2, miscTileIndex);
     }
 
     void PlaceNewTile(GameObject obj, GameObject objToPlace, Color newColor, List<Level.tile> list, int index, int layer, int x, int y)
@@ -199,12 +227,14 @@ public class TileEditor : MonoBehaviour {
                             if (index != -1)
                                 level.SetPixel(list[index].x, list[index].y, newColor);
                             else*/
+                        Debug.Log("ADDING TO LAYER 0");
                         level.SetPixel(x, y, newColor);
                         break;
                     }
                 case 1:
                     {
-                        levelmisc.SetPixel(list[index].x, list[index].y, newColor);
+                        Debug.Log("ADDING TO LAYER 1");
+                        levelmisc.SetPixel(x, y, newColor);
                         break;
                     }
             }
@@ -213,7 +243,6 @@ public class TileEditor : MonoBehaviour {
         {
             Debug.Log("Cannot place on negative indexes or exceeding level bounds! (bounds: " + level.width + " " + level.height + ")");
         }
-
     }
 
     void DestroyTile(GameObject obj, List<Level.tile> list, int index, int layer)
@@ -246,19 +275,39 @@ public class TileEditor : MonoBehaviour {
         Destroy(obj);
     }
 
-    void populateMenu(List<GameObject> listOfButtons, byte list)
-    {   
+    void populateMenu(List<GameObject> listOfButtons, byte list, int index)
+    {
         //list 0 for floor, 1 for walls, 2 for misc;
         for (int i = 0; i < listOfButtons.Count; i++)
         {
             SetActiveTile script = listOfButtons[i].GetComponent<SetActiveTile>();
-            script.index = floorTileIndex+i;
+            script.index = index+i;
             script.list = list; // 0 = floor, 1 = walls, 2 = misc
-            script.changeSelf(levelManager.Sprite_FloorTileList[floorTileIndex+i], levelManager.Color_FloorTileList[floorTileIndex + i]);
+            switch (list)
+            {
+                case 0:
+                    if (index + i < levelManager.Sprite_FloorTileList.Count)
+                        script.changeSelf(levelManager.Sprite_FloorTileList[index + i], levelManager.Color_FloorTileList[index + i]);
+                    else
+                        script.resetSelf(emptycolor);
+                    break;
+                case 1:
+                    if (index + i < levelManager.Sprite_WallTileList.Count)
+                        script.changeSelf(levelManager.Sprite_WallTileList[index + i], levelManager.Color_WallTileList[index + i]);
+                    else
+                        script.resetSelf(emptycolor);
+                    break;
+                case 2:
+                    if (index + i < levelManager.Sprite_MiscList.Count)
+                        script.changeSelf(levelManager.Sprite_MiscList[index + i], levelManager.Color_Misc[index + i]);
+                    else
+                        script.resetSelf(emptycolor);
+                    break;
+            }
         }
     }
 
-    public void ChangeActiveTile(int ind, GameObject obj, Color color)
+    public void ChangeActiveTile(int ind, GameObject obj, Color color, byte list)
     {
         activeObjectIndex = ind;
         activeObject = obj;
@@ -266,6 +315,10 @@ public class TileEditor : MonoBehaviour {
         SpriteRenderer newSprite = obj.GetComponent<SpriteRenderer>();
         editorTextureRenderer.color = newSprite.color;
         editorTextureRenderer.sprite = newSprite.sprite;
+        if (list == 2)
+            layer = 1;
+        else
+            layer = 0;
     }
 
     public void ResetActiveTile()
@@ -354,6 +407,31 @@ public class TileEditor : MonoBehaviour {
         result = pathmain.Split(stringSeparators, System.StringSplitOptions.None);
         inputFieldCo.text = result[0];
 
+        foreach (Level.tile tile in maintiles)
+        {
+            Destroy(tile.tileobj);
+        }
+        maintiles.Clear();
+        foreach (Level.tile tile in misctiles)
+        {
+            Destroy(tile.tileobj);
+        }
+        misctiles.Clear();
+
+        if (loadfilepath.Length != 0)
+        {
+            byte[] bytes = File.ReadAllBytes(loadfilepath);
+            Texture2D tempmaintexture = new Texture2D(128, 128);
+            tempmaintexture.LoadImage(bytes);
+            level = tempmaintexture;
+        }
+
+        levelWidth = level.width;
+        levelHeight = level.height;
+        resizeLevelBounds();
+
+
+
         if (loadfilepath.Length != 0)
         {
             byte[] bytes = File.ReadAllBytes(loadfilepath);
@@ -376,32 +454,11 @@ public class TileEditor : MonoBehaviour {
             levelManager.levelMiscTexture.name = pathmisc;
         }
 
-        try
-        {
-            foreach (Level.tile tile in maintiles)
-            {
-                Destroy(tile.tileobj);
-            }
-            maintiles.Clear();
-            foreach (Level.tile tile in misctiles)
-            {
-                Destroy(tile.tileobj);
-            }
-            misctiles.Clear();
+        levelManager.loadLevel();
+        levelManager.loadMisc();
 
-            levelManager.loadLevel();
-            levelManager.loadMisc();
-
-            levelWidth = level.width;
-            levelHeight = level.height;
-            resizeLevelBounds();
-
-            Debug.Log("Loaded " + pathmain + " | " + pathmisc);
-        }
-        catch (System.Exception)
-        {
-            Debug.Log("Failed to load selected map!");
-        }
+        Debug.Log("Loaded " + pathmain + " | " + pathmisc);
+        Debug.Log("Loaded : " + levelManager.maintilelist.Count + " and miscs: "+ levelManager.misctilelist.Count);
     }
 
     public void SetMapName(string name)
@@ -429,6 +486,7 @@ public class TileEditor : MonoBehaviour {
     public void resizeLevelBounds()
     {
         level.Resize(levelWidth, levelHeight);
+        levelmisc.Resize(levelWidth, levelHeight);
         Color32 resetColor = new Color32(0, 0, 0, 0);
         Color32[] resetColorArray = level.GetPixels32();
         for (int i = 0; i < resetColorArray.Length; i++)
@@ -438,7 +496,9 @@ public class TileEditor : MonoBehaviour {
 
         level.SetPixels32(resetColorArray);
         level.Apply();
-        levelmisc = level;
+
+        levelmisc.SetPixels32(resetColorArray);
+        levelmisc.Apply();
 
         editorBoundsTextureScale = editorBoundsTexture.transform.localScale;
         editorBoundsTextureScale.x = levelWidth;
@@ -459,6 +519,37 @@ public class TileEditor : MonoBehaviour {
         v |= v >> 16;
         v++;
         return v;
+    }
+
+    public void changeListIndex(int listIndex)
+    {
+        switch (listIndex)
+        {
+            case 0:
+                floorTileIndex -= (int)(Input.GetAxis("Mouse ScrollWheel")*10);
+                if (floorTileIndex > levelManager.Sprite_FloorTileList.Count-1)
+                    floorTileIndex = levelManager.Sprite_FloorTileList.Count - 1;
+                else if (floorTileIndex < 0)
+                    floorTileIndex = 0;
+                populateMenu(floorButtonList, 0, floorTileIndex);
+                break;
+            case 1:
+                wallTileIndex -= (int)(Input.GetAxis("Mouse ScrollWheel")*10);
+                if (wallTileIndex > levelManager.Sprite_WallTileList.Count - 1)
+                    wallTileIndex = levelManager.Sprite_WallTileList.Count - 1;
+                else if (wallTileIndex < 0)
+                    wallTileIndex = 0;
+                populateMenu(wallButtonList, 1, wallTileIndex);
+                break;
+            case 2:
+                miscTileIndex -= (int)(Input.GetAxis("Mouse ScrollWheel")*10);
+                if (miscTileIndex > levelManager.Sprite_MiscList.Count - 1)
+                    miscTileIndex = levelManager.Sprite_MiscList.Count - 1;
+                else if (miscTileIndex < 0)
+                    miscTileIndex = 0;
+                populateMenu(miscButtonList, 2, miscTileIndex);
+                break;
+        }
     }
 
     /*
