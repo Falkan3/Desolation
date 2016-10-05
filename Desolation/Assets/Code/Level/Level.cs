@@ -3,10 +3,10 @@ using System.Collections.Generic;
 
 public class Level : MonoBehaviour
 {
+    [System.Serializable]
     public class tile
     {
-        public int x;
-        public int y;
+        public int x, y;
         public GameObject tileobj;
 
         public tile(int x_coordinate, int y_coordinate, GameObject obj)
@@ -17,9 +17,38 @@ public class Level : MonoBehaviour
         }
     }
 
+    [System.Serializable]
+    public class map
+    {
+        public Texture2D mainLevelTexture;
+        public Texture2D miscLevelTexture;
+
+        public map(Texture2D mainlt, Texture2D misclt)
+        {
+            mainLevelTexture = mainlt;
+            miscLevelTexture = misclt;
+        }
+    }
+
+    [System.Serializable]
+    public class scenario
+    {
+        public map levelMap;
+        public tile tileobj;
+
+        public scenario(tile ntile, map nmap)
+        {
+            tileobj = ntile;
+            levelMap = nmap;
+        }
+    }
+
     private int levelWidth;
     private int levelHeight;
-    
+
+    //LEVELORDER
+    public List<scenario> scenarioList = new List<scenario>();
+
     //create lists of tiles
     public List<tile> maintilelist = new List<tile>();
     public List<tile> misctilelist = new List<tile>();

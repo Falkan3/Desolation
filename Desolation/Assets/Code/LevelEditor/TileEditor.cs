@@ -44,6 +44,8 @@ public class TileEditor : MonoBehaviour {
     private Color emptycolor;
     private GameObject activeObject; //active tile to place
     private GameObject objtodestroy;
+    private GameObject pipetButton; //Button object used when selecting object with pipet
+    private SetActiveTile tileOfPipetButton;
 
     
     private int index = 0; //index of tile to destroy
@@ -58,6 +60,8 @@ public class TileEditor : MonoBehaviour {
     List<GameObject> wallButtonList = new List<GameObject>();
     List<GameObject> miscButtonList = new List<GameObject>();
 
+    private Text coordinatesText;
+
     // Use this for initialization
     void Start () {
         levelManager = GetComponent<Level>();
@@ -70,10 +74,12 @@ public class TileEditor : MonoBehaviour {
         //editorTextureRenderer.color = new Color(editorTextureRenderer.color.r, editorTextureRenderer.color.g, editorTextureRenderer.color.b, 0.5f);
         //levelManager.loadLevel();
 
+        /*
         maintiles = levelManager.maintilelist;
         misctiles = levelManager.misctilelist;
         Debug.Log(maintiles.Count);
         Debug.Log(misctiles.Count);
+        */
 
         editorDefaultSprite = editorTextureRenderer.sprite;
 
@@ -81,6 +87,8 @@ public class TileEditor : MonoBehaviour {
 
         generateTileEditor();
         layer = 0;
+
+        coordinatesText = GameObject.Find("CoordinatesText").GetComponent<Text>();
     }
 	
 	// Update is called once per frame
@@ -92,6 +100,7 @@ public class TileEditor : MonoBehaviour {
         ray.y = Mathf.Round(ray.y);
 
         editorTexture.transform.position = new Vector2(ray.x, ray.y);
+        coordinatesText.text = "Coordinates: X = " + ray.x + " Y = " + ray.y;
 
         if (!EventSystem.current.IsPointerOverGameObject())
         {
@@ -118,6 +127,71 @@ public class TileEditor : MonoBehaviour {
 
                                 Debug.Log(activeObjectColor);
                                 PlaceNewTile(objtodestroy, activeObject, activeObjectColor, misctiles, index, layer, Mathf.RoundToInt(ray.x), Mathf.RoundToInt(ray.y));
+                                break;
+                            }
+                    }
+                }
+                else
+                {
+                    switch (layer)
+                    {
+                        case 0:
+                            {
+                                objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+
+                                try
+                                {
+                                    pipetButton = floorButtonList.Where(item => item.GetComponent<SetActiveTile>().tile.GetComponent<SpriteRenderer>().sprite == objtodestroy.GetComponent<SpriteRenderer>().sprite).Select(item => item).FirstOrDefault();
+                                    if (pipetButton == null)
+                                    {
+                                        pipetButton = wallButtonList.Where(item => item.GetComponent<SetActiveTile>().tile.GetComponent<SpriteRenderer>().sprite == objtodestroy.GetComponent<SpriteRenderer>().sprite).Select(item => item).FirstOrDefault();
+                                    }
+                                    if (pipetButton == null)
+                                    {
+                                        Debug.Log("Tile not found, could not pipet.");
+                                    }
+                                    else
+                                    {
+                                        tileOfPipetButton = pipetButton.GetComponent<SetActiveTile>();
+
+                                        ChangeActiveTile(tileOfPipetButton.index, objtodestroy, tileOfPipetButton.tilecolor, tileOfPipetButton.list);
+
+                                        pipetButton = null;
+                                        tileOfPipetButton = null;
+                                    }
+                                }
+                                catch (System.Exception ex)
+                                {
+                                    Debug.Log("Tile could not be pipeted. Error: " + ex);
+                                }
+                                break;
+                            }
+                        case 1:
+                            {
+                                objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+
+                                try
+                                {
+                                    pipetButton = miscButtonList.Where(item => item.GetComponent<SetActiveTile>().tile.GetComponent<SpriteRenderer>().sprite == objtodestroy.GetComponent<SpriteRenderer>().sprite).Select(item => item).FirstOrDefault();
+
+                                    if (pipetButton == null)
+                                    {
+                                        Debug.Log("Tile not found, could not pipet.");
+                                    }
+                                    else
+                                    {
+                                        tileOfPipetButton = pipetButton.GetComponent<SetActiveTile>();
+
+                                        ChangeActiveTile(tileOfPipetButton.index, objtodestroy, tileOfPipetButton.tilecolor, tileOfPipetButton.list);
+
+                                        pipetButton = null;
+                                        tileOfPipetButton = null;
+                                    }
+                                }
+                                catch (System.Exception ex)
+                                {
+                                    Debug.Log("Tile could not be pipeted. Error: " + ex);
+                                }
                                 break;
                             }
                     }
@@ -337,10 +411,10 @@ public class TileEditor : MonoBehaviour {
         try
         {
             byte[] bytes = level.EncodeToPNG();
-            File.WriteAllBytes(Application.dataPath + "/Levels/" + pathmain, bytes);
+            File.WriteAllBytes(Application.dataPath + "/Levels/Custom/" + pathmain, bytes);
 
             byte[] bytesmisc = levelmisc.EncodeToPNG();
-            File.WriteAllBytes(Application.dataPath + "/Levels/" + pathmisc, bytesmisc);
+            File.WriteAllBytes(Application.dataPath + "/Levels/Custom/" + pathmisc, bytesmisc);
 
             applyLevel();
         }
@@ -365,8 +439,8 @@ public class TileEditor : MonoBehaviour {
             string pathtomain;
             string pathtomisc;
 
-            pathtomain = "Assets/Levels/" + pathmain;
-            pathtomisc = "Assets/Levels/" + pathmisc;
+            pathtomain = "Assets/Levels/Custom/" + pathmain;
+            pathtomisc = "Assets/Levels/Custom/" + pathmisc;
 
             Debug.Log(pathtomain);
 
@@ -407,8 +481,8 @@ public class TileEditor : MonoBehaviour {
     {
         try
         {
-            string loadfilepath = EditorUtility.OpenFilePanel("Load a main map", Application.dataPath + "/Levels/", "png");
-            string loadfilepathmisc = EditorUtility.OpenFilePanel("Load a misc map", Application.dataPath + "/Levels/", "png");
+            string loadfilepath = EditorUtility.OpenFilePanel("Load a main map", Application.dataPath + "/Levels/Custom/", "png");
+            string loadfilepathmisc = EditorUtility.OpenFilePanel("Load a misc map", Application.dataPath + "/Levels/Custom/", "png");
 
             string[] stringSeparators = new string[] { "/" };
             string[] result;
@@ -465,6 +539,9 @@ public class TileEditor : MonoBehaviour {
 
             levelManager.loadLevel();
             levelManager.loadMisc();
+
+            maintiles = levelManager.maintilelist;
+            misctiles = levelManager.misctilelist;
 
             Debug.Log("Loaded " + pathmain + " | " + pathmisc);
             Debug.Log("Loaded : " + levelManager.maintilelist.Count + " and miscs: " + levelManager.misctilelist.Count);
