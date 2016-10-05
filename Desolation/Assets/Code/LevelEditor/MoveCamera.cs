@@ -1,6 +1,7 @@
 ﻿using UnityEngine;
 using System.Collections;
 using UnityEngine.EventSystems;
+using UnityEngine.UI;
 
 public class MoveCamera : MonoBehaviour {
     public int speed;
@@ -8,9 +9,11 @@ public class MoveCamera : MonoBehaviour {
 
     public float scrollsensitivity;
 
+    private GameObject mainInputField;
+
     // Use this for initialization
     void Start () {
-
+        mainInputField = GameObject.Find("InputField");
     }
 	
 	// Update is called once per frame
@@ -22,8 +25,11 @@ public class MoveCamera : MonoBehaviour {
 
         if (isWalking)
         {
-            moveVector = new Vector2(input_x, input_y).normalized * speed * Time.deltaTime;
-            transform.Translate(moveVector);
+            if (mainInputField.GetComponent<InputField>().isFocused == false)
+            {
+                moveVector = new Vector2(input_x, input_y).normalized * speed * Time.deltaTime;
+                transform.Translate(moveVector);
+            }
         }
 
         if (!EventSystem.current.IsPointerOverGameObject())
