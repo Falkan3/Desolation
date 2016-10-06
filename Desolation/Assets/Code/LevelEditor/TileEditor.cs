@@ -44,6 +44,7 @@ public class TileEditor : MonoBehaviour {
     private Color emptycolor;
     private GameObject activeObject; //active tile to place
     private GameObject objtodestroy;
+    private Level.tile pipetObject;
     private GameObject pipetButton; //Button object used when selecting object with pipet
     private SetActiveTile tileOfPipetButton;
 
@@ -137,14 +138,14 @@ public class TileEditor : MonoBehaviour {
                     {
                         case 0:
                             {
-                                objtodestroy = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                                pipetObject = maintiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item).FirstOrDefault();
 
                                 try
                                 {
-                                    pipetButton = floorButtonList.Where(item => item.GetComponent<SetActiveTile>().tile.GetComponent<SpriteRenderer>().sprite == objtodestroy.GetComponent<SpriteRenderer>().sprite).Select(item => item).FirstOrDefault();
+                                    pipetButton = floorButtonList.Where(item => item.GetComponent<SetActiveTile>().tilecolor == pipetObject.color).Select(item => item).FirstOrDefault();
                                     if (pipetButton == null)
                                     {
-                                        pipetButton = wallButtonList.Where(item => item.GetComponent<SetActiveTile>().tile.GetComponent<SpriteRenderer>().sprite == objtodestroy.GetComponent<SpriteRenderer>().sprite).Select(item => item).FirstOrDefault();
+                                        pipetButton = wallButtonList.Where(item => item.GetComponent<SetActiveTile>().tilecolor == pipetObject.color).Select(item => item).FirstOrDefault();
                                     }
                                     if (pipetButton == null)
                                     {
@@ -154,7 +155,7 @@ public class TileEditor : MonoBehaviour {
                                     {
                                         tileOfPipetButton = pipetButton.GetComponent<SetActiveTile>();
 
-                                        ChangeActiveTile(tileOfPipetButton.index, objtodestroy, tileOfPipetButton.tilecolor, tileOfPipetButton.list);
+                                        ChangeActiveTile(tileOfPipetButton.index, pipetObject.tileobj, tileOfPipetButton.tilecolor, tileOfPipetButton.list);
 
                                         pipetButton = null;
                                         tileOfPipetButton = null;
@@ -168,11 +169,11 @@ public class TileEditor : MonoBehaviour {
                             }
                         case 1:
                             {
-                                objtodestroy = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item.tileobj).FirstOrDefault();
+                                pipetObject = misctiles.Where(item => item.x == ray.x && item.y == ray.y).Select(item => item).FirstOrDefault();
 
                                 try
                                 {
-                                    pipetButton = miscButtonList.Where(item => item.GetComponent<SetActiveTile>().tile.GetComponent<SpriteRenderer>().sprite == objtodestroy.GetComponent<SpriteRenderer>().sprite).Select(item => item).FirstOrDefault();
+                                    pipetButton = miscButtonList.Where(item => item.GetComponent<SetActiveTile>().tilecolor == pipetObject.color).Select(item => item).FirstOrDefault();
 
                                     if (pipetButton == null)
                                     {
@@ -182,7 +183,7 @@ public class TileEditor : MonoBehaviour {
                                     {
                                         tileOfPipetButton = pipetButton.GetComponent<SetActiveTile>();
 
-                                        ChangeActiveTile(tileOfPipetButton.index, objtodestroy, tileOfPipetButton.tilecolor, tileOfPipetButton.list);
+                                        ChangeActiveTile(tileOfPipetButton.index, pipetObject.tileobj, tileOfPipetButton.tilecolor, tileOfPipetButton.list);
 
                                         pipetButton = null;
                                         tileOfPipetButton = null;
@@ -285,13 +286,13 @@ public class TileEditor : MonoBehaviour {
                 //Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity);
 
                 GameObject tileobj = Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity) as GameObject;
-                list.Add(new Level.tile(x, y, tileobj));
+                list.Add(new Level.tile(x, y, tileobj, newColor));
                 DestroyTile(obj, list, index, layer);
             }
             else
             {
                 GameObject tileobj = Instantiate(objToPlace, new Vector3(x, y), Quaternion.identity) as GameObject;
-                list.Add(new Level.tile(x, y, tileobj));
+                list.Add(new Level.tile(x, y, tileobj, newColor));
             }
             switch (layer)
             {

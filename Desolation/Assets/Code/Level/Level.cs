@@ -8,12 +8,14 @@ public class Level : MonoBehaviour
     {
         public int x, y;
         public GameObject tileobj;
+        public Color color;
 
-        public tile(int x_coordinate, int y_coordinate, GameObject obj)
+        public tile(int x_coordinate, int y_coordinate, GameObject obj, Color col)
         {
             x = x_coordinate;
             y = y_coordinate;
             tileobj = obj;
+            color = col;
         }
     }
 
@@ -107,7 +109,7 @@ public class Level : MonoBehaviour
                 {
                     tileobj = Instantiate(spawnPlatform1, new Vector3(x, y), Quaternion.identity) as GameObject;
                     Vector2 pos = new Vector2(x, y);
-                    maintilelist.Add(new tile(x, y, tileobj));
+                    maintilelist.Add(new tile(x, y, tileobj, spawnPointColour));
                     if (player != null)
                         player.transform.position = pos;
                 }
@@ -117,7 +119,7 @@ public class Level : MonoBehaviour
                     if (Color_FloorTileList[i] == (tileColors[x + y * levelWidth]))
                     {
                         tileobj = Instantiate(Sprite_FloorTileList[i], new Vector3(x, y), Quaternion.identity) as GameObject;
-                        maintilelist.Add(new tile(x, y, tileobj));
+                        maintilelist.Add(new tile(x, y, tileobj, Color_FloorTileList[i]));
                     }
                 }
 
@@ -126,7 +128,7 @@ public class Level : MonoBehaviour
                     if (Color_WallTileList[i] == (tileColors[x + y * levelWidth]))
                     {
                         tileobj = Instantiate(Sprite_WallTileList[i], new Vector3(x, y), Quaternion.identity) as GameObject;
-                        maintilelist.Add(new tile(x, y, tileobj));
+                        maintilelist.Add(new tile(x, y, tileobj, Color_WallTileList[i]));
                     }
                 }
             }
@@ -148,7 +150,7 @@ public class Level : MonoBehaviour
                     if (Color_Misc[i] == (tileColors[x + y * levelWidth]))
                     {
                         tileobj = Instantiate(Sprite_MiscList[i], new Vector3(x, y), Quaternion.identity) as GameObject;
-                        misctilelist.Add(new tile(x, y, tileobj));
+                        misctilelist.Add(new tile(x, y, tileobj, Color_Misc[i]));
                     }
                 }
             }
