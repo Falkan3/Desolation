@@ -9,6 +9,7 @@ public class IntroFlash : MonoBehaviour {
 
     void Start()
     {
+        emerge.enabled = false;
         textureColor = GetComponent<Renderer>().material.color;
     }
 

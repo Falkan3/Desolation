@@ -435,8 +435,6 @@ public class TileEditor : MonoBehaviour {
         */
         try
         {
-
-
             string pathtomain;
             string pathtomisc;
 
